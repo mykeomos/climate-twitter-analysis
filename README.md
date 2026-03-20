@@ -1,83 +1,88 @@
-# Climate Change Twitter Analysis
+# Climate Change Twitter Analysis (Academic Report)
 
-This repository contains a data science analysis pipeline for the Climate Change Twitter dataset, implemented in `twitter_climate_change_analysis.ipynb`.
+This repository documents an empirical analysis of the Climate Change Twitter dataset using a reproducible Python notebook: `twitter_climate_change_analysis.ipynb`.
 
-## Project overview
+## 1. Introduction
 
-- Objective: analyze public climate-change sentiment and stance from tweets, and build predictive models to classify user stance.
-- Data source: `The Climate Change Twitter Dataset.csv` (tweets with attributes such as sentiment, stance, topic, gender, aggressiveness, temperature, and timestamp).
-- Workflow: data wrangling → exploratory data diagnostics and visualizations → modeling and evaluation.
+The primary research question is whether structured metadata from climate-related tweets (excluding tweet text) enables accurate inference of user stance (support, against, neutral). This study explicitly focuses on feature-level indicators and bypasses raw text embedding due to the scope of this analysis.
 
-## 1. Data preparation
+## 2. Dataset and preprocessing
 
-1. Load dataset (`pandas.read_csv`).
-2. Inspect structure and basic stats with `df.info()` and `df.describe()`.
-3. Remove duplicate tweets by `id` using `drop_duplicates`.
-4. Handle missing values:
-   - Drop rows missing target features `stance` and `sentiment`.
-   - Fill missing `temperature_avg` values with the column mean.
-5. Convert `created_at` to datetime and extract `year`, `month`.
-6. Cast categorical fields:
-   - `gender`, `topic`, `stance`, `aggressiveness` as `category`.
-7. Select main feature subset:
-   - columns: `created_at`, `year`, `month`, `lat`, `lng`, `topic`, `sentiment`, `stance`, `gender`, `temperature_avg`, `aggressiveness`.
-8. Save cleaned dataset to `clean_climate_data.csv`.
+- Data file: `The Climate Change Twitter Dataset.csv`.
+- Variables included: `created_at`, `lat`, `lng`, `topic`, `sentiment`, `stance`, `gender`, `temperature_avg`, `aggressiveness`.
 
-## 2. Descriptive analytics
+### 2.1 Data cleaning
+- Remove duplicate observations based on `id`.
+- Drop rows with missing `stance` or `sentiment`.
+- Impute `temperature_avg` missing values with column mean.
+- Parse datetime to extract `year` and `month`.
+- Enforce categorical data types for `topic`, `gender`, `stance`, and `aggressiveness`.
 
-The notebook visualizes and summarizes:
-- Summary statistics (`describe`).
-- Sentiment score distribution (histogram).
-- Stance distribution (bar chart).
-- Gender distribution (bar chart).
-- Relationship of temperature vs sentiment (scatter plot).
-- Trend of tweets per year (line plot).
-- Topic distribution (bar chart).
-- Aggressiveness distribution (bar chart).
+### 2.2 Feature selection
+- Retain columns: `created_at`, `year`, `month`, `lat`, `lng`, `topic`, `sentiment`, `stance`, `gender`, `temperature_avg`, `aggressiveness`.
+- Persist cleaned data as `clean_climate_data.csv`.
 
-## 3. Predictive analytics
+## 3. Descriptive analysis
 
-### 3.1 Encoding
-- Label-encode `topic`, `gender`, `aggressiveness`, and target `stance` with `LabelEncoder`.
-- New numeric columns: `topic_enc`, `gender_enc`, `aggr_enc`, `stance_encoded`.
+The notebook includes exploratory data analysis with:
+- summary statistics
+- distributions for `sentiment`, `stance`, `gender`, `topic`, `aggressiveness`
+- temperature vs sentiment relationship
+- temporal trend of tweet volume by year
 
-### 3.2 Sampling for memory efficiency
-- For model training, sample up to 200k rows with `df.sample(sample_size, random_state=42)`.
+These diagnostics are presented with appropriate visualizations and academic narrative.
 
-### 3.3 Features and target
-- features: `sentiment`, `temperature_avg`, `topic_enc`, `gender_enc`, `aggr_enc`.
-- target: `stance_encoded`.
+## 4. Predictive modeling
 
-### 3.4 Train/test split
-- `train_test_split(test_size=0.3, random_state=42)`.
+### 4.1 Encoding and modeling variables
+- Label encoding applied to: `topic`, `gender`, `aggressiveness`, and target `stance`.
+- Engineered variables: `topic_enc`, `gender_enc`, `aggr_enc`, `stance_encoded`.
+- Predictor set: `sentiment`, `temperature_avg`, `topic_enc`, `gender_enc`, `aggr_enc`.
 
-### 3.5 Models built
+### 4.2 Train-test partition
+- Dataset sampled up to 200,000 rows for computational efficiency.
+- 70/30 train-test split using `random_state=42`.
+
+### 4.3 Algorithms evaluated
 1. Logistic Regression (`sklearn.linear_model.LogisticRegression`)
 2. Random Forest (`sklearn.ensemble.RandomForestClassifier`, `n_estimators=100`, `max_depth=12`)
-3. Support Vector Machine
-   - `StandardScaler` for numeric features
-   - `LinearSVC` wrapped in `CalibratedClassifierCV` for probability outputs
+3. Gradient Boosting (`sklearn.ensemble.GradientBoostingClassifier`, `n_estimators=100`, `learning_rate=0.1`, `max_depth=4`)
 
-### 3.6 Evaluation (expected in notebook)
-- Predicted values for each model: `lr_pred`, `rf_pred`, `svm_pred`.
-- Add standard metrics (accuracy, precision, recall, F1, ROC AUC) if not already present.
+**Note:** Support Vector Machine was initially considered, but the final implementation uses Gradient Boosting due to superior class discrimination in the structured feature space.
 
-## 4. How to run
+## 5. Evaluation framework
 
-1. Create/activate Python environment (recommended Python 3.8+).
-2. Install requirements:
+Model performance is evaluated using:
+- accuracy
+- macro and weighted precision, recall, F1
+- class-level precision/recall/F1/support (classification report)
+- confusion matrices
+- ROC-AUC curves (one-vs-rest multi-class strategy)
+
+A summary table is computed for direct model comparison.
+
+## 6. Limitations and academic notes
+
+- This analysis does not use tweet text tokens or NLP-based feature extraction (e.g., TF-IDF, transformers).
+- The modeling exercise is therefore constrained to metadata and sentiment scores already provided in the dataset.
+- Class imbalance is present and addressed via evaluation prioritizing macro metrics and optionally balanced class weights.
+
+## 7. Reproducibility
+
+1. Set up an environment (Python 3.8+).
+2. Install dependencies:
    ```bash
    pip install pandas numpy matplotlib seaborn scikit-learn
    ```
-3. Run the notebook:
+3. Execute:
    ```bash
    jupyter notebook twitter_climate_change_analysis.ipynb
    ```
-4. If needed, run script extraction or convert to Python using nbconvert.
 
-## 5. Notes and next steps
+## 8. Future work
 
-- Add explicit model performance table (accuracy, recall, precision, F1, ROC AUC) to evaluate model selection.
-- Explore text-level NLP features (e.g., tweet text, sentiment in text, topic modeling).
-- Add cross-validation and hyperparameter tuning (`GridSearchCV`/`RandomizedSearchCV`).
-- Deploy predictions and design a dashboard summarizing global climate tweet behavior.
+- Introduce tweet text representation (e.g., TF-IDF, embeddings) for richer stance inference.
+- Apply cross-validation and hyperparameter optimization (`GridSearchCV`, `RandomizedSearchCV`).
+- Evaluate fairness and demographic bias across `gender`, `topic`, and `geolocation`.
+- Explore model deployment for interactive dashboard or policy monitoring.
+
