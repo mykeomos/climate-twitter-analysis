@@ -1,4 +1,4 @@
-# Climate Change Twitter Analysis (Academic Report)
+# Climate Change Twitter Analysis
 
 This repository documents an empirical analysis of the Climate Change Twitter dataset using a reproducible Python notebook: `twitter_climate_change_analysis.ipynb`.
 
